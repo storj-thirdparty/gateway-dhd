@@ -42,7 +42,7 @@ func startServer(cmd *cobra.Command, args []string) {
 		objectPath := objectPathWithSlash[1:]
 
 		reqToken := c.GetHeader("Authorization")
-		
+
 		index := strings.Index(reqToken, "Storj ")
 		size := len("Storj ")
 
@@ -50,7 +50,7 @@ func startServer(cmd *cobra.Command, args []string) {
 			//Entered Authorization Header is in improper format
 			return
 		}
-		
+
 		serializedKey := reqToken[index+size:]
 
 		access, err := uplink.ParseAccess(serializedKey)

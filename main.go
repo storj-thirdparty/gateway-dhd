@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "gateway-dhd/cmd"
+import "github.com/storj-thirdparty/gateway-dhd/cmd"
 
 func main() {
 	cmd.Execute()
