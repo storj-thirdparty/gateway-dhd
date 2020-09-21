@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -32,22 +35,37 @@ func startServer(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetString("port")
 
+	// Set gin to Release Mode before initializing the gin router
 	gin.SetMode(gin.ReleaseMode)
+
+	// Initialize the gin router
 	router := gin.Default()
 
+	// GET request
 	router.GET("/:bucketName/*objectPath", func(c *gin.Context) {
 
+		// Create a custom header
+		c.Header("x-storj-metadata", "")
+
+		// Get bucket name and object path from GET request
 		bucketName := c.Param("bucketName")
 		objectPathWithSlash := c.Param("objectPath")
 		objectPath := objectPathWithSlash[1:]
 
+		// Get serialized access key from the Authorization Header entered
 		reqToken := c.GetHeader("Authorization")
+		if reqToken == "" {
+			c.Status(http.StatusBadRequest)
+			log.Print("Entered Authorization Header is in improper format")
+			return
+		}
 
 		index := strings.Index(reqToken, "Storj ")
 		size := len("Storj ")
 
 		if index == -1 {
-			//Entered Authorization Header is in improper format
+			c.Status(http.StatusBadRequest)
+			log.Print("Entered Authorization Header is in improper format")
 			return
 		}
 
@@ -55,41 +73,61 @@ func startServer(cmd *cobra.Command, args []string) {
 
 		access, err := uplink.ParseAccess(serializedKey)
 		if err != nil {
-			//Error in getting access handle from Storj uplink
+			c.Status(http.StatusUnauthorized)
+			log.Print(err)
 			return
 		}
-		//Access handle obtained from Storj uplink
+		// Access handle obtained from Storj uplink
 
 		project, err := uplink.OpenProject(context.Background(), access)
 		if err != nil {
-			//Error in getting project handle from Storj uplink
+			c.Status(http.StatusInternalServerError)
+			log.Print(err)
 			return
 		}
-		//Project handle obtained from Storj uplink
+		// Project handle obtained from Storj uplink
 
+		obj, err := project.StatObject(context.Background(), bucketName, objectPath)
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			log.Print(err)
+			return
+		}
+		// Stat information of the object obtained from Storj uplink
+
+		metadataObject, err := json.Marshal(obj.System)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			log.Print(err)
+			return
+		}
+		c.Writer.Header().Add("x-storj-metadata", string(metadataObject))
+
+		// Downloading the object
 		download, err := project.DownloadObject(context.Background(), bucketName, objectPath, nil)
 		if err != nil {
-			//Error in download object
+			c.Status(http.StatusInternalServerError)
+			log.Print(err)
 			return
 		}
 
-		//Downloading the object
-		c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%", objectPath))
-		c.Writer.Header().Add("Content-Type", c.GetHeader("Content-Type"))
 		_, err = io.Copy(c.Writer, download)
 		if err != nil {
-			//Some error occurred while downloading the object
+			c.Status(http.StatusInternalServerError)
+			log.Print(err)
 			return
 		}
-		//Object downloaded successfully
 
 		err = download.Close()
 		if err != nil {
-			//Error in closing the download of the object
+			c.Status(http.StatusInternalServerError)
+			log.Print(err)
 			return
 		}
-		//Object download completed & closed successfully
-
+		
+		c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%", objectPath))
+		c.Writer.Header().Add("Content-Type", c.GetHeader("Content-Type"))
+		// Object download completed & closed successfully
 	})
 
 	// Listen and serve
