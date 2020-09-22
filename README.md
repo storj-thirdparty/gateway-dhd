@@ -1,4 +1,4 @@
-  # gateway-dhd
+# gateway-dhd
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/storj-thirdparty/gateway-dhd)](https://goreportcard.com/report/github.com/storj-thirdparty/gateway-dhd)
 
@@ -59,6 +59,11 @@ $ ./gateway-dhd start --port <custom_port_number>
 ##### Get help
 ```
 $ ./gateway-dhd --help
+```
+##### Once the REST server is started, the Swagger UI documentation for this API can be accessed from the following URL in the browser:
+```
+$ <gateway_url>:<port_number>/swagger/index.html
+(For example: localhost:8000/swagger/index.html)
 ```
 
 ## Testing
