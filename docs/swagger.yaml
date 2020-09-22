@@ -1,0 +1,36 @@
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+paths:
+  /download/{bucketName}/{objectPath}:
+    get:
+      description: download a Storj object by its bucketName & objectPath
+      parameters:
+      - description: Bucket Name
+        in: path
+        name: bucketName
+        required: true
+        type: string
+      - description: Object Path
+        in: path
+        name: objectPath
+        required: true
+        type: string
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Download a Storj object
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+x-extension-openapi:
+  example: value on a json format
