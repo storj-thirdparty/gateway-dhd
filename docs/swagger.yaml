@@ -8,9 +8,9 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
 paths:
-  /download/{bucketName}/{objectPath}:
+  /transfer/{bucketName}/{objectPath}:
     get:
-      description: download a Storj object by its bucketName & objectPath
+      description: Download a Storj object by its bucketName & objectPath
       parameters:
       - description: Bucket Name
         in: path
@@ -22,10 +22,45 @@ paths:
         name: objectPath
         required: true
         type: string
+      produces:
+      - application/json
+      - text/plain
+      - application/octet-stream
+      - video/mp4
+      - image/png
+      - image/jpeg
+      - image/gif
       responses: {}
       security:
       - ApiKeyAuth: []
       summary: Download a Storj object
+      tags:
+      - Object Operations
+  /transfer/{bucketName}/{objectPathPrefix}:
+    post:
+      description: Upload an object at the specified bucketName & objectPathPrefix on Storj
+      parameters:
+      - description: Bucket Name
+        in: path
+        name: bucketName
+        required: true
+        type: string
+      - description: Object Path Prefix
+        in: path
+        name: objectPathPrefix
+        required: true
+        type: string
+      - description: File Name
+        in: path
+        name: fileName
+        required: true
+        type: string
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Upload an object to Storj
+      tags:
+      - Object Operations
 securityDefinitions:
   ApiKeyAuth:
     in: header

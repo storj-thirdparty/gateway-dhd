@@ -8,7 +8,7 @@
 
 Dial Home Device. Small gateway for protocol translation.
 
-It is an HTTP REST Server to stream the response from the decentralized Storj network to the client. Written in Golang.
+It is an HTTP REST Server to stream the response from the decentralized Storj network to the client (download) & vice versa (upload). Written in Golang.
 
 ```
 Usage:
@@ -19,6 +19,7 @@ Available Commands:
   start       start the REST server
 
 Flags:
+  -e, --enableDocs    For generating UI documentation of the REST server
   -h, --help          help for gateway-dhd
   -p, --port string   Port number of the REST server (default "8080")
 ```  
@@ -53,15 +54,27 @@ Once you have built the project run the following commands as per your requireme
 ```
 $ ./gateway-dhd start
 ```
+##### Start the REST server at default port 8080 with Swagger UI API documentation enabled
+```
+$ ./gateway-dhd start --enableDocs
+```
 ##### Start the REST server at custom port
 ```
 $ ./gateway-dhd start --port <custom_port_number>
 ```
-##### Get help
+##### Start the REST server at custom port with Swagger UI API documentation enabled
+```
+$ ./gateway-dhd start --port <custom_port_number> --enableDocs
+```
+##### Get help about gateway
 ```
 $ ./gateway-dhd --help
 ```
-##### Once the REST server is started, the Swagger UI documentation for this API can be accessed from the following URL in the browser:
+##### Get help about gateway start command and its flags
+```
+$ ./gateway-dhd start --help
+```
+##### Once the REST server has been started & if the Swagger UI documentation for this API has been enabled, then it can be accessed from the following URL in the browser :
 ```
 $ <gateway_url>:<port_number>/swagger/index.html
 (For example: localhost:8080/swagger/index.html)

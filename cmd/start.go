@@ -31,6 +31,7 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 	var defaultPortNo string
 	startCmd.Flags().StringVarP(&defaultPortNo, "port", "p", "8080", "Port number of the REST server")
+	startCmd.Flags().BoolP("enableDocs", "e", false, "For generating UI documentation of the REST server")
 
 }
 
@@ -53,13 +54,12 @@ func init() {
 func startServer(cmd *cobra.Command, args []string) {
 
 	port, _ := cmd.Flags().GetString("port")
+	enableDocs, _ := cmd.Flags().GetBool("enableDocs")
 
 	// programmatically set swagger info
 	docs.SwaggerInfo.Title = "Storj Gateway-DHD API"
-	docs.SwaggerInfo.Description = "This is a REST server to stream Storj objects from libuplink to the client."
+	docs.SwaggerInfo.Description = "This is a REST server to stream Storj objects from libuplink to the client & vice versa."
 	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "localhost:" + port
-	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	// Set gin to Release Mode before initializing the gin router
@@ -69,10 +69,15 @@ func startServer(cmd *cobra.Command, args []string) {
 	router := gin.Default()
 
 	// GET request
-	router.GET("/download/:bucketName/*objectPath", DownloadObject) 
+	router.GET("/transfer/:bucketName/*objectPath", DownloadObject)
 
-	// use ginSwagger middleware to serve the API docs
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// POST request
+	router.POST("/transfer/:bucketName/*objectPathPrefix", UploadObject)
+
+	// use ginSwagger middleware to serve the API docs if enabled by the CLI flags
+	if enableDocs {
+		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	// Listen and serve
 	router.Run(":" + port)
@@ -81,12 +86,20 @@ func startServer(cmd *cobra.Command, args []string) {
 
 // DownloadObject godoc
 // @Summary Download a Storj object
-// @Description download a Storj object by its bucketName & objectPath
+// @Description Download a Storj object by its bucketName & objectPath
+// @Produce application/json
+// @Produce text/plain
+// @Produce application/octet-stream
+// @Produce video/mp4
+// @Produce image/png
+// @Produce image/jpeg
+// @Produce image/gif
 // @Param bucketName path string true "Bucket Name"
 // @Param objectPath path string true "Object Path"
 // @Header 200 {string} Token "qwerty"
-// @Router /download/{bucketName}/{objectPath} [get]
+// @Router /transfer/{bucketName}/{objectPath} [get]
 // @Security ApiKeyAuth
+// @Tags Object Operations
 func DownloadObject(c *gin.Context) {
 
 	// Create a custom header
@@ -131,6 +144,7 @@ func DownloadObject(c *gin.Context) {
 		return
 	}
 	// Project handle obtained from Storj uplink
+	defer project.Close()
 
 	obj, err := project.StatObject(context.Background(), bucketName, objectPath)
 	if err != nil {
@@ -174,4 +188,119 @@ func DownloadObject(c *gin.Context) {
 	c.Writer.Header().Add("Content-Type", c.GetHeader("Content-Type"))
 	// Object download completed & closed successfully
 
+}
+
+// UploadObject godoc
+// @Summary Upload an object to Storj
+// @Description Upload an object at the specified bucketName & objectPathPrefix on Storj
+// @Param bucketName path string true "Bucket Name"
+// @Param objectPathPrefix path string true "Object Path Prefix"
+// @Param fileName path string true "File Name"
+// @Header 200 {string} Token "qwerty"
+// @Router /transfer/{bucketName}/{objectPathPrefix} [post]
+// @Security ApiKeyAuth
+// @Tags Object Operations
+func UploadObject(c *gin.Context) {
+
+	// Get bucket name and object path prefix and file name from POST request so as to obtain the destination object path
+	
+	bucketName := c.Param("bucketName")
+	objectPathPrefixWithSlash := c.Param("objectPathPrefix")
+	objectPathPrefix := objectPathPrefixWithSlash[1:]
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		log.Print(err)
+		return
+	}
+	objectName := file.Filename
+
+	var objectPath string
+	if objectPathPrefix == "" {
+		objectPath = objectName
+	} else {
+		objectPath = objectPathPrefix + "/" + objectName
+	}
+
+	// Get serialized access key from the Authorization Header entered
+	reqToken := c.GetHeader("Authorization")
+	if reqToken == "" {
+		c.Status(http.StatusBadRequest)
+		log.Print("Entered Authorization Header is in improper format")
+		return
+	}
+
+	index := strings.Index(reqToken, "Storj ")
+	size := len("Storj ")
+
+	if index == -1 {
+		c.Status(http.StatusBadRequest)
+		log.Print("Entered Authorization Header is in improper format")
+		return
+	}
+
+	serializedKey := reqToken[index+size:]
+
+	access, err := uplink.ParseAccess(serializedKey)
+	if err != nil {
+		c.Status(http.StatusUnauthorized)
+		log.Print(err)
+		return
+	}
+	// Access handle obtained from Storj uplink
+
+	project, err := uplink.OpenProject(context.Background(), access)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+	// Project handle obtained from Storj uplink
+	defer project.Close()
+
+	// Get the io.Reader from the file to be uploaded
+	objectReader, err := file.Open()
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+
+	// Intitiate the upload of our Object to the specified bucket and object path prefix
+	upload, err := project.UploadObject(context.Background(), bucketName, objectPath, nil)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+
+	// Copy the data to the upload.
+	_, err = io.Copy(upload, objectReader)
+	if err != nil {
+		abortErr := upload.Abort()
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		log.Print(abortErr)
+		return
+	}
+
+	// Set the custom metadata to be included with the object.
+	err = upload.SetCustomMetadata(context.Background(), uplink.CustomMetadata{})
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+
+	// Commit the uploaded object.
+	err = upload.Commit()
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+
+	// Object uploaded, its custom metadata set and then upload committed successfully
+	c.Status(http.StatusCreated)
 }

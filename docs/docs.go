@@ -33,14 +33,64 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/download/{bucketName}/{objectPath}": {
+        "/transfer/{bucketName}/{objectPathPrefix}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload an object at the specified bucketName \u0026 objectPathPrefix on Storj",
+                "tags": [
+                    "Object Operations"
+                ],
+                "summary": "Upload an object to Storj",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bucket Name",
+                        "name": "bucketName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Object Path Prefix",
+                        "name": "objectPathPrefix",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "File Name",
+                        "name": "fileName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/transfer/{bucketName}/{objectPath}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "download a Storj object by its bucketName \u0026 objectPath",
+                "description": "Download a Storj object by its bucketName \u0026 objectPath",
+                "produces": [
+                    "application/json",
+                    "text/plain",
+                    "application/octet-stream",
+                    "video/mp4",
+                    "image/png",
+                    "image/jpeg",
+                    "image/gif"
+                ],
+                "tags": [
+                    "Object Operations"
+                ],
                 "summary": "Download a Storj object",
                 "parameters": [
                     {
