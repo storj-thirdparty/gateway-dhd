@@ -1,5 +1,6 @@
 # gateway-dhd
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/cc4244073efa46299c90ad41eb5611ce)](https://app.codacy.com/gh/storj-thirdparty/gateway-dhd?utm_source=github.com&utm_medium=referral&utm_content=storj-thirdparty/gateway-dhd&utm_campaign=Badge_Grade)
 [![Go Report Card](https://goreportcard.com/badge/github.com/storj-thirdparty/gateway-dhd)](https://goreportcard.com/report/github.com/storj-thirdparty/gateway-dhd)
 
 
