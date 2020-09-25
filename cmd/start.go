@@ -193,20 +193,34 @@ func DownloadObject(c *gin.Context) {
 // UploadObject godoc
 // @Summary Upload an object to Storj
 // @Description Upload an object at the specified bucketName & objectPathPrefix on Storj
+// @Accept multipart/form-data
 // @Param bucketName path string true "Bucket Name"
-// @Param objectPathPrefix path string true "Object Path Prefix"
-// @Param fileName path string true "File Name"
+// @Param objectPathPrefix path string true "Object Path Prefix" default(/)
+// @Param file formData file true "File Name"
+// @Param name formData string false "Your name" default(anonymous)
+// @Param email formData string false "Your email" default(anonymous)
 // @Header 200 {string} Token "qwerty"
 // @Router /transfer/{bucketName}/{objectPathPrefix} [post]
 // @Security ApiKeyAuth
 // @Tags Object Operations
 func UploadObject(c *gin.Context) {
 
-	// Get bucket name and object path prefix and file name from POST request so as to obtain the destination object path
+	// Get bucket name, object path prefix and file name from the POST request so as to obtain the destination object path
 	
 	bucketName := c.Param("bucketName")
+
 	objectPathPrefixWithSlash := c.Param("objectPathPrefix")
-	objectPathPrefix := objectPathPrefixWithSlash[1:]
+	var objectPathPrefix string
+	slashIndex := strings.Index(objectPathPrefixWithSlash, "/")
+	if slashIndex == 0 {
+		if len(objectPathPrefixWithSlash) > 1 {
+			objectPathPrefix = objectPathPrefixWithSlash[1:]
+		} else {
+			objectPathPrefix = ""
+		}
+	}
+	objectPathPrefix = strings.TrimPrefix(objectPathPrefix,"/")
+	objectPathPrefix = strings.TrimSuffix(objectPathPrefix,"/")
 
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -221,6 +235,18 @@ func UploadObject(c *gin.Context) {
 		objectPath = objectName
 	} else {
 		objectPath = objectPathPrefix + "/" + objectName
+	}
+
+	// Get object custom metadata to be set from the POST request
+	uploaderName := c.PostForm("name")
+	uploaderEmail := c.PostForm("email")
+
+	// Create an uplink CustomMetaData object.
+	// This would be used to set the custom metadata for the uploaded object
+	metaData := uplink.CustomMetadata{
+		"name": uploaderName, 
+		"email": uploaderEmail,
+		"uploaded through": "gateway-dhd",
 	}
 
 	// Get serialized access key from the Authorization Header entered
@@ -286,7 +312,7 @@ func UploadObject(c *gin.Context) {
 	}
 
 	// Set the custom metadata to be included with the object.
-	err = upload.SetCustomMetadata(context.Background(), uplink.CustomMetadata{})
+	err = upload.SetCustomMetadata(context.Background(), metaData)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 		log.Print(err)
@@ -301,6 +327,26 @@ func UploadObject(c *gin.Context) {
 		return
 	}
 
+	// Stat the uploaded object information to display its custom metadata in the response header
+	obj, err := project.StatObject(context.Background(), bucketName, objectPath)
+	if err != nil {
+		c.Status(http.StatusNotFound)
+		log.Print(err)
+		return
+	}
+	// Stat information of the object obtained from Storj uplink
+
+	metadataObject, err := json.Marshal(obj.Custom)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		log.Print(err)
+		return
+	}
+	
+	// Show the custom metadata of the uploaded object in the response header 
+	c.Writer.Header().Add("x-storj-custom-metadata", string(metadataObject))
+
 	// Object uploaded, its custom metadata set and then upload committed successfully
 	c.Status(http.StatusCreated)
+
 }

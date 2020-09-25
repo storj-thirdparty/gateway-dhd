@@ -38,6 +38,8 @@ paths:
       - Object Operations
   /transfer/{bucketName}/{objectPathPrefix}:
     post:
+      consumes:
+      - multipart/form-data
       description: Upload an object at the specified bucketName & objectPathPrefix on Storj
       parameters:
       - description: Bucket Name
@@ -45,15 +47,26 @@ paths:
         name: bucketName
         required: true
         type: string
-      - description: Object Path Prefix
+      - default: /
+        description: Object Path Prefix
         in: path
         name: objectPathPrefix
         required: true
         type: string
       - description: File Name
-        in: path
-        name: fileName
+        in: formData
+        name: file
         required: true
+        type: file
+      - default: anonymous
+        description: Your name
+        in: formData
+        name: name
+        type: string
+      - default: anonymous
+        description: Your email
+        in: formData
+        name: email
         type: string
       responses: {}
       security:

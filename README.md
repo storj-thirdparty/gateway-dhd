@@ -42,6 +42,12 @@ Then, build the project using the following:
 cd gateway-dhd
 go build
 ```
+***(Optional)*** If you want to customize the Swagger UI documentation, add those UI annotations to ```gateway-dhd/cmd/start.go``` file and then build the project using the following:
+```
+cd gateway-dhd
+swag init -g cmd/start.go
+go build
+```
 #### Option #2: go get into your gopath
 To download the project inside your GOPATH use the following command:
 ```

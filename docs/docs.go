@@ -41,6 +41,9 @@ var doc = `{
                     }
                 ],
                 "description": "Upload an object at the specified bucketName \u0026 objectPathPrefix on Storj",
+                "consumes": [
+                    "multipart/form-data"
+                ],
                 "tags": [
                     "Object Operations"
                 ],
@@ -55,17 +58,32 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "default": "/",
                         "description": "Object Path Prefix",
                         "name": "objectPathPrefix",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
+                        "type": "file",
                         "description": "File Name",
-                        "name": "fileName",
-                        "in": "path",
+                        "name": "file",
+                        "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "anonymous",
+                        "description": "Your name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "anonymous",
+                        "description": "Your email",
+                        "name": "email",
+                        "in": "formData"
                     }
                 ],
                 "responses": {}
