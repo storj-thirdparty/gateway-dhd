@@ -33,14 +33,76 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/download/{bucketName}/{objectPath}": {
+        "/transfer/{bucketName}/{objectPathPrefix}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload an object at the specified bucketName \u0026 objectPathPrefix on Storj",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "tags": [
+                    "Object Operations"
+                ],
+                "summary": "Upload an object to Storj",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bucket Name",
+                        "name": "bucketName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "/",
+                        "description": "Object Path Prefix",
+                        "name": "objectPathPrefix",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File Name",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "anonymous",
+                        "description": "Your name",
+                        "name": "name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "anonymous",
+                        "description": "Your email",
+                        "name": "email",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/transfer/{bucketName}/{objectPath}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "download a Storj object by its bucketName \u0026 objectPath",
+                "description": "Download a Storj object by its bucketName \u0026 objectPath",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Object Operations"
+                ],
                 "summary": "Download a Storj object",
                 "parameters": [
                     {

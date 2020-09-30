@@ -9,7 +9,7 @@
 
 Dial Home Device. Small gateway for protocol translation.
 
-It is an HTTP REST Server to stream the response from the decentralized Storj network to the client. Written in Golang.
+It is an HTTP REST Server to stream the response from the decentralized Storj network to the client (download) & vice versa (upload). Written in Golang.
 
 ```
 Usage:
@@ -20,6 +20,7 @@ Available Commands:
   start       start the REST server
 
 Flags:
+  -e, --enableDocs    For generating UI documentation of the REST server
   -h, --help          help for gateway-dhd
   -p, --port string   Port number of the REST server (default "8080")
 ```  
@@ -35,17 +36,34 @@ To build from scratch, [install the latest Go](https://golang.org/doc/install#in
 #### Option #1: clone this repo (most common)
 To clone the repo
 ```
-git clone https://github.com/storj-thirdparty/gateway-dhd.git
+$ git clone https://github.com/storj-thirdparty/gateway-dhd.git
 ```
 Then, build the project using the following:
 ```
-cd gateway-dhd
-go build
+$ cd gateway-dhd
+$ go build
+```
+***(Optional)*** If you want to customize the Swagger UI documentation, add those UI annotations to ```gateway-dhd/cmd/start.go``` file and then build the project using the following:
+* **Note**: Ensure that the ```swag``` golang package is installed, by running the following command:
+	```
+	$ swag --version
+	```
+	If some version is displayed, it means ```swag``` is installed.
+	
+	Else, run the following command to install ```swag```:
+	```
+	$ go get -u github.com/swaggo/swag/cmd/swag
+	```
+
+```
+$ cd gateway-dhd
+$ swag init -g cmd/start.go
+$ go build
 ```
 #### Option #2: go get into your gopath
 To download the project inside your GOPATH use the following command:
 ```
-go get github.com/storj-thirdparty/gateway-dhd
+$ go get github.com/storj-thirdparty/gateway-dhd
 ```
 ## Run
 Once you have built the project run the following commands as per your requirement:
@@ -54,15 +72,27 @@ Once you have built the project run the following commands as per your requireme
 ```
 $ ./gateway-dhd start
 ```
+##### Start the REST server at default port 8080 with Swagger UI API documentation enabled
+```
+$ ./gateway-dhd start --enableDocs
+```
 ##### Start the REST server at custom port
 ```
 $ ./gateway-dhd start --port <custom_port_number>
 ```
-##### Get help
+##### Start the REST server at custom port with Swagger UI API documentation enabled
+```
+$ ./gateway-dhd start --port <custom_port_number> --enableDocs
+```
+##### Get help about gateway
 ```
 $ ./gateway-dhd --help
 ```
-##### Once the REST server is started, the Swagger UI documentation for this API can be accessed from the following URL in the browser:
+##### Get help about gateway start command and its flags
+```
+$ ./gateway-dhd start --help
+```
+##### Once the REST server has been started & if the Swagger UI documentation for this API has been enabled, then it can be accessed from the following URL in the browser :
 ```
 $ <gateway_url>:<port_number>/swagger/index.html
 (For example: localhost:8080/swagger/index.html)
