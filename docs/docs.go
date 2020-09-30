@@ -98,13 +98,7 @@ var doc = `{
                 ],
                 "description": "Download a Storj object by its bucketName \u0026 objectPath",
                 "produces": [
-                    "application/json",
-                    "text/plain",
-                    "application/octet-stream",
-                    "video/mp4",
-                    "image/png",
-                    "image/jpeg",
-                    "image/gif"
+                    "application/octet-stream"
                 ],
                 "tags": [
                     "Object Operations"

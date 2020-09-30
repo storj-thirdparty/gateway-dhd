@@ -87,13 +87,7 @@ func startServer(cmd *cobra.Command, args []string) {
 // DownloadObject godoc
 // @Summary Download a Storj object
 // @Description Download a Storj object by its bucketName & objectPath
-// @Produce application/json
-// @Produce text/plain
 // @Produce application/octet-stream
-// @Produce video/mp4
-// @Produce image/png
-// @Produce image/jpeg
-// @Produce image/gif
 // @Param bucketName path string true "Bucket Name"
 // @Param objectPath path string true "Object Path"
 // @Header 200 {string} Token "qwerty"
@@ -170,6 +164,8 @@ func DownloadObject(c *gin.Context) {
 		return
 	}
 
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%q", objectPath))
+
 	_, err = io.Copy(c.Writer, download)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -183,8 +179,7 @@ func DownloadObject(c *gin.Context) {
 		log.Print(err)
 		return
 	}
-	
-	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%", objectPath))
+
 	c.Writer.Header().Add("Content-Type", c.GetHeader("Content-Type"))
 	// Object download completed & closed successfully
 

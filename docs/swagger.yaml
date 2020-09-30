@@ -23,13 +23,7 @@ paths:
         required: true
         type: string
       produces:
-      - application/json
-      - text/plain
       - application/octet-stream
-      - video/mp4
-      - image/png
-      - image/jpeg
-      - image/gif
       responses: {}
       security:
       - ApiKeyAuth: []
