@@ -52,15 +52,10 @@ paths:
         name: file
         required: true
         type: file
-      - default: anonymous
-        description: Your name
+      - default: ""
+        description: Your custommetadata
         in: formData
-        name: name
-        type: string
-      - default: anonymous
-        description: Your email
-        in: formData
-        name: email
+        name: yourMetaData
         type: string
       responses: {}
       security:

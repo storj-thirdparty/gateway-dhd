@@ -73,16 +73,9 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "default": "anonymous",
-                        "description": "Your name",
-                        "name": "name",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "default": "anonymous",
-                        "description": "Your email",
-                        "name": "email",
+                        "default": "",
+                        "description": "Your custommetadata",
+                        "name": "yourMetaData",
                         "in": "formData"
                     }
                 ],
