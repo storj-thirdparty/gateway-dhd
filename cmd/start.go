@@ -224,6 +224,7 @@ func UploadObject(c *gin.Context) {
 	objectPathPrefix = strings.TrimPrefix(objectPathPrefix, "/")
 	objectPathPrefix = strings.TrimSuffix(objectPathPrefix, "/")
 
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.Status(http.StatusBadRequest)
